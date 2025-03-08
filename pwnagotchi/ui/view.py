@@ -37,6 +37,14 @@ class View(object):
             self._black = 0x00
             self._white = 0xFF
 
+        if 'bgcolor' in config['ui']:
+            self._white = config['ui']['bgcolor']
+            WHITE = config['ui']['bgcolor']
+
+        if 'fgcolor' in config['ui']:
+            self._black = config['ui']['fgcolor']
+            BLACK = config['ui']['fgcolor']
+            
         # setup faces from the configuration in case the user customized them
         faces.load_from_config(config['ui']['faces'])
 
@@ -44,6 +52,7 @@ class View(object):
         self._render_cbs = []
         self._config = config
         self._canvas = None
+        self._web_canvas = None
         self._frozen = False
         self._lock = Lock()
         self._voice = Voice(lang=config['main']['lang'])
@@ -68,7 +77,9 @@ class View(object):
 
             'face': Text(value=faces.SLEEP,
                          position=(config['ui']['faces']['position_x'], config['ui']['faces']['position_y']),
-                         color=BLACK, font=fonts.Huge, png=config['ui']['faces']['png']),
+                         color=self._black, bgcolor=self._white, font=fonts.Huge, png=config['ui']['faces']['png'],
+                         scale=config['ui']['faces'].get('scale', 1),
+                         colorize=config['ui']['faces'].get('colorize', True)),
 
             # 'friend_face': Text(value=None, position=self._layout['friend_face'], font=fonts.Bold, color=BLACK),
             'friend_name': Text(value=None, position=self._layout['friend_face'], font=fonts.BoldSmall, color=BLACK),
@@ -113,7 +124,7 @@ class View(object):
         self._state.has_element(key)
 
     def add_element(self, key, elem):
-        if self.invert is 1 and elem.color:
+        if self.invert == 1 and elem.color:
             if elem.color == 0xff:
                 elem.color = 0x00
             elif elem.color == 0x00:
@@ -387,16 +398,19 @@ class View(object):
             state = self._state
             changes = state.changes(ignore=self._ignore_changes)
             if force or len(changes):
-                self._canvas = Image.new('1', (self._width, self._height), self._white)
+                colormode = self._config.get('ui', {}).get('colormode', '1')
+                self._canvas = Image.new(colormode, (self._width, self._height), self._white)
                 drawer = ImageDraw.Draw(self._canvas)
-
+                drawer.font_mode = '1'
+                
                 plugins.on('ui_update', self)
 
                 for key, lv in state.items():
                     # lv is a ui element
                     lv.draw(self._canvas, drawer)
 
-                web.update_frame(self._canvas)
+                #web.update_frame(self._canvas)
+                self._web_canvas = self._canvas.copy()
 
                 for cb in self._render_cbs:
                     cb(self._canvas)
