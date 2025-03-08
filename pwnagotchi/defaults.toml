@@ -63,6 +63,9 @@ mac = ""
 phone = "" # android or ios
 ip = "" # optional, default : 192.168.44.2 if android or 172.20.10.2 if ios
 dns = "8.8.8.8 1.1.1.1" # optional, default (google): "8.8.8.8 1.1.1.1". Consider using anonymous DNS like OpenNic :-)
+autoconnect = true # optional, default true. if true, uses nmcli autoconnect else, up by itself
+metric = 200 # optional, default: 200. Changes connection priority
+internet = true # optional, default true. Use phone as a gateway to Internet or just control
 
 [main.plugins.fix_services]
 enabled = true
